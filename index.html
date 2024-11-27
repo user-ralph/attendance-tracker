@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>USTP Student Attendance Log</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="login-page.css">
+  <link rel="icon" href="\sources\schoologo.png" type="image/x-icon">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=account_circle" />
+</head>
+<body>
+  <div class="card w-50 mb-3 loginboxa">
+    <div class="card-body">
+      <h5 class="card-title titlecarda">Student Login</h5>
+      <div class="input-group mb-3">
+        <span class="input-group-text" id="inputGroup-sizing-default"><span class="material-symbols-outlined">
+          account_circle
+        </span>Student ID</span>
+        <input type="text" class="form-control" id="studentIdInput" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default">
+      </div>
+      <div class="input-group mb-3">
+        <label class="input-group-text" for="inputGroupSelect01">Program</label>
+        <select class="form-select" id="programSelect">
+          <option value="BS Computer Engineering">BS Computer Engineering</option>
+          <option value="BS Civil Engineering">BS Civil Engineering</option>
+          <option value="BS Electrical Engineering">BS Electrical Engineering</option>
+          <option value="BS Electronics Engineering">BS Electronics Engineering</option>
+        </select>
+      </div>
+      <div class="d-grid gap-2">
+        <button class="btn btn-primary" type="button" id="loginButton">Login</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='prof-login.html'">Login as Instructor</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center py-3">
+    <p class="mb-0">Powered by: Embedded System Group</p>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAtjkpqH9lFCPUX4ahJBbw9RdUQKme-O0c",
+      authDomain: "fingerprint-attendance-1a1dd.firebaseapp.com",
+      projectId: "fingerprint-attendance-1a1dd",
+      storageBucket: "fingerprint-attendance-1a1dd.firebasestorage.app",
+      messagingSenderId: "947365104002",
+      appId: "1:947365104002:web:81ec0637a02e83aa0ae79b",
+      databaseURL: "https://fingerprint-attendance-1a1dd-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    document.getElementById('loginButton').addEventListener('click', function() {
+      const studentId = document.getElementById('studentIdInput').value;
+      const program = document.getElementById('programSelect').value;
+
+      if (studentId === '') {
+        alert('Please enter your Student ID.');
+        return;
+      }
+
+      const studentsRef = ref(database, 'students');
+      get(child(studentsRef, studentId)).then((snapshot) => {
+        if (snapshot.exists()) {
+          const studentData = snapshot.val();
+          if (studentData.programDept === program) {
+            localStorage.setItem('studentId', studentId);
+            window.location.href = 'student-page.html';
+          } else {
+            alert('Incorrect program selected.');
+          }
+        } else {
+          alert('Student ID not found.');
+        }
+      }).catch((error) => {
+        console.error('Error fetching student data:', error);
+      });
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
