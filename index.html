@@ -4,52 +4,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>USTP Student Attendance Log</title>
+  <title>Employee Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <link rel="stylesheet" href="login-page.css">
+  <link rel="stylesheet" href="dash-page.css">
   <link rel="icon" href="\sources\schoologo.png" type="image/x-icon">
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=account_circle" />
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=assignment_ind" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    .sticky-header th {
+      position: sticky;
+      top: 0;
+      background-color: #fff;
+      z-index: 1;
+      border-bottom: 2px solid #dee2e6;
+    }
+  </style>
 </head>
 
 <body>
-  <div class="card w-50 mb-3 loginboxa">
+
+  <nav class="navbar bg-body-tertiary px-4">
+    <div class="container-fluid">
+      <span class="navbar-brand mb-0 h1">Good day, <span id="instructorGreeting"></span>!</span>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" type="button"
+          onclick="window.location.href='index.html'">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="card student-attendancecar">
+    <h5 class="card-header">Student Attendance Log</h5>
     <div class="card-body">
-      <h5 class="card-title titlecarda">Student Loginn</h5>
-      <div class="input-group mb-3">
-        <span class="input-group-text" id="inputGroup-sizing-default"><span class="material-symbols-outlined">
-            account_circle
-          </span>Student ID</span>
-        <input type="text" class="form-control" id="studentIdInput" aria-label="Sizing example input"
-          aria-describedby="inputGroup-sizing-default">
+      <div class="mb-2 d-flex gap-2">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+          Add Student Data
+        </button>
+        <button type="button" class="btn btn-danger" id="toggleDeleteButton">
+          Delete Student Data
+        </button>
       </div>
-      <div class="input-group mb-3">
-        <label class="input-group-text" for="inputGroupSelect01">Program</label>
-        <select class="form-select" id="programSelect">
-          <option value="BS Computer Engineering">BS Computer Engineering</option>
-          <option value="BS Civil Engineering">BS Civil Engineering</option>
-          <option value="BS Electrical Engineering">BS Electrical Engineering</option>
-          <option value="BS Electronics Engineering">BS Electronics Engineering</option>
-        </select>
+      <div class="table-responsive">
+        <table class="table">
+          <thead class="sticky-header">
+            <tr>
+              <th scope="col">Student ID</th>
+              <th scope="col">
+                Name
+                <button class="btn btn-sm" onclick="sortTable('name')">
+                  <i class="bi bi-arrow-down-up" id="nameSort"></i>
+                </button>
+              </th>
+              <th scope="col">
+                Roll No.
+                <button class="btn btn-sm" onclick="sortTable('roll')">
+                  <i class="bi bi-arrow-down-up" id="rollSort"></i>
+                </button>
+              </th>
+              <th scope="col">Class Code</th>
+              <th scope="col">Fingerprint Enrolled</th>
+              <th scope="col">Day-1</th>
+              <th scope="col">Day-2</th>
+              <th scope="col">Day-3</th>
+              <th scope="col">Day-4</th>
+              <th scope="col">Day-5</th>
+              <th scope="col">Day-6</th>
+              <th scope="col">Day-7</th>
+              <th scope="col">Day-8</th>
+              <th scope="col">Remarks</th>
+              <th scope="col" class="delete-column" style="display: none;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="studentsData">
+          </tbody>
+        </table>
       </div>
-      <div class="d-grid gap-2">
-        <button class="btn btn-primary" type="button" id="loginButton">Login</button>
-        <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='instructor-login.html'">Login
-          as Instructor</button>
+    </div>
+
+    <div class="card-footer">
+      <button class="btn btn-success" onclick="downloadStudentLog()">
+        <i class="bi bi-download"></i> Download Student Log
+      </button>
+    </div>
+  </div>
+
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Add Student</h1>
+        </div>
+        <div class="modal-body">
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default">Student ID</span>
+            <input type="text" class="form-control" id="studentId" aria-label="Sizing example input"
+              aria-describedby="inputGroup-sizing-default" onkeypress="return onlyNumbers(event)">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default">Name</span>
+            <input type="text" class="form-control" id="studentName" aria-label="Sizing example input"
+              aria-describedby="inputGroup-sizing-default">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default">Program</span>
+            <select class="form-select" id="studentProgram" aria-label="Program select">
+              <option selected disabled style="color: rgba(0, 0, 0, 0.4);">Choose program...</option>
+              <option value="BS Computer Engineering">BS Computer Engineering</option>
+              <option value="BS Civil Engineering">BS Civil Engineering</option>
+              <option value="BS Electrical Engineering">BS Electrical Engineering</option>
+              <option value="BS Electronics Engineering">BS Electronics Engineering</option>
+              <option value="BS Mechanical Engineering">BS Mechanical Engineering</option>
+            </select>
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default">Roll Number</span>
+            <input type="text" class="form-control" id="studentRollNumber" aria-label="Sizing example input"
+              aria-describedby="inputGroup-sizing-default" onkeypress="return onlyNumbers(event)" maxlength="3">
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default">Class Code</span>
+            <input type="text" class="form-control" id="studentClassCode" aria-label="Sizing example input"
+              aria-describedby="inputGroup-sizing-default">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="addStudentButton">Add Student</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <footer class="text-center py-3">
-    <p class="mb-0">Powered by: Embedded System Group</p>
-  </footer>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+    import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
-    const firebaseConfig = {
+    export const firebaseConfig = {
       apiKey: "AIzaSyAtjkpqH9lFCPUX4ahJBbw9RdUQKme-O0c",
       authDomain: "fingerprint-attendance-1a1dd.firebaseapp.com",
       projectId: "fingerprint-attendance-1a1dd",
@@ -60,33 +153,292 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+    window.database = getDatabase(app);
+    window.dbRemove = remove;
+    window.dbRef = ref;
 
-    document.getElementById('loginButton').addEventListener('click', function () {
-      const studentId = document.getElementById('studentIdInput').value;
-      const program = document.getElementById('programSelect').value;
+    function fetchAndDisplayData() {
+  const studentsRef = ref(database, 'students');
+  onValue(studentsRef, (snapshot) => {
+    const studentsData = snapshot.val();
+    const tableBody = document.getElementById('studentsData');
+    tableBody.innerHTML = '';
 
-      if (studentId === '') {
-        alert('Please enter your Student ID.');
+    for (const studentId in studentsData) {
+      const student = studentsData[studentId];
+      const row = document.createElement('tr');
+
+      const totalAttendance =
+        student.classattendA +
+        student.classattendB +
+        student.classattendC +
+        student.classattendD +
+        student.classattendE +
+        student.classattendF +
+        student.classattendG +
+        student.classattendH;
+
+      const remarks = totalAttendance < 5 ? 'Probation' : 'Regular';
+      const rowClass = totalAttendance < 5 ? 'table-danger' : 'table-success';
+
+      row.classList.add(rowClass); // Assign the appropriate class
+
+      row.innerHTML = `
+        <td>${studentId}</td>
+        <td>${student.fullName}</td>
+        <td>${student.rollNumber}</td>
+        <td>${student.classCode}</td>
+        <td>${student.fingerprintEnroll ? 'Yes' : 'No'}</td>
+        <td>${student.classattendA}</td>
+        <td>${student.classattendB}</td>
+        <td>${student.classattendC}</td>
+        <td>${student.classattendD}</td>
+        <td>${student.classattendE}</td>
+        <td>${student.classattendF}</td>
+        <td>${student.classattendG}</td>
+        <td>${student.classattendH}</td>
+        <td>${remarks}</td>
+        <td class="delete-column" style="display: none;">
+          <button class="btn btn-link text-danger" onclick="deleteStudent('${studentId}')">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      `;
+
+      tableBody.appendChild(row);
+    }
+  });
+}
+
+    window.fetchAndDisplayData = fetchAndDisplayData;
+    window.onload = fetchAndDisplayData;
+
+    document.getElementById('addStudentButton').addEventListener('click', async () => {
+      const studentId = document.getElementById('studentId').value;
+      const studentName = document.getElementById('studentName').value;
+      const studentProgram = document.getElementById('studentProgram').value;
+      const studentRollNumber = document.getElementById('studentRollNumber').value;
+      const studentClassCode = document.getElementById('studentClassCode').value;
+
+      if (!studentProgram || studentProgram === 'Choose program...') {
+        alert('Please select a program');
         return;
       }
 
       const studentsRef = ref(database, 'students');
-      get(child(studentsRef, studentId)).then((snapshot) => {
-        if (snapshot.exists()) {
-          const studentData = snapshot.val();
-          if (studentData.programDept === program) {
-            localStorage.setItem('studentId', studentId);
-            window.location.href = 'student-page.html';
-          } else {
-            alert('Incorrect program selected.');
-          }
-        } else {
-          alert('Student ID not found.');
+      const snapshot = await get(studentsRef);
+      const students = snapshot.val() || {};
+
+      let isDuplicate = false;
+      let duplicateMessage = '';
+
+      Object.values(students).forEach(student => {
+        if (student.fullName === studentName) {
+          isDuplicate = true;
+          duplicateMessage = 'Student name already exists';
         }
-      }).catch((error) => {
-        console.error('Error fetching student data:', error);
+        if (student.rollNumber === studentRollNumber) {
+          isDuplicate = true;
+          duplicateMessage = 'Roll number already exists';
+        }
       });
+
+      if (students[studentId]) {
+        isDuplicate = true;
+        duplicateMessage = 'Student ID already exists';
+      }
+
+      if (isDuplicate) {
+        alert(duplicateMessage);
+        return;
+      }
+
+      const studentData = {
+        fullName: studentName,
+        rollNumber: studentRollNumber,
+        classCode: studentClassCode,
+        programDept: studentProgram,
+        fingerprintEnroll: false,
+        classattendA: 0,
+        classattendB: 0,
+        classattendC: 0,
+        classattendD: 0,
+        classattendE: 0,
+        classattendF: 0,
+        classattendG: 0,
+        classattendH: 0
+      };
+
+      set(ref(database, 'students/' + studentId), studentData)
+        .then(() => {
+          alert('Student added successfully!');
+          fetchAndDisplayData();
+          resetForm();
+          const modal = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
+          modal.hide();
+        })
+        .catch((error) => {
+          console.error('Error adding student: ', error);
+          alert('Failed to add student: ' + error.message);
+        });
+    });
+
+    document.getElementById('downloadLogButton').addEventListener('click', () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const table = document.querySelector('.table');
+      const rows = table.querySelectorAll('tr');
+
+      let rowIndex = 10;
+      rows.forEach((row, index) => {
+        const cells = row.querySelectorAll('th, td');
+        let cellIndex = 10;
+        cells.forEach((cell) => {
+          doc.text(cell.textContent, cellIndex, rowIndex);
+          cellIndex += 30;
+        });
+        rowIndex += 10;
+      });
+
+      doc.save('student-log.pdf');
+    });
+
+    function resetForm() {
+      document.getElementById('studentId').value = '';
+      document.getElementById('studentName').value = '';
+      document.getElementById('studentProgram').selectedIndex = 0;
+      document.getElementById('studentRollNumber').value = '';
+      document.getElementById('studentClassCode').value = '';
+    }
+
+    document.getElementById('exampleModal').addEventListener('show.bs.modal', function () {
+      resetForm();
+    });
+  </script>
+
+  <script>
+    function onlyNumbers(event) {
+      const charCode = (event.which) ? event.which : event.keyCode;
+      if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+        return false;
+      }
+      return true;
+    }
+    let sortStates = {
+      name: true,
+      roll: true
+    };
+
+    function sortTable(column) {
+      const table = document.querySelector('.table');
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+
+      rows.sort((a, b) => {
+        if (column === 'name') {
+          const nameA = a.cells[1].textContent.trim().toLowerCase(); // index 1 for name
+          const nameB = b.cells[1].textContent.trim().toLowerCase();
+          return sortStates.name ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+        } else if (column === 'roll') {
+          const rollA = parseInt(a.cells[2].textContent.trim()); // index 2 for roll number
+          const rollB = parseInt(b.cells[2].textContent.trim());
+          return sortStates.roll ? rollA - rollB : rollB - rollA;
+        }
+      });
+
+      tbody.innerHTML = '';
+      rows.forEach(row => tbody.appendChild(row));
+
+      sortStates[column] = !sortStates[column];
+      const icon = document.querySelector(`#${column}Sort`);
+      icon.className = sortStates[column] ? 'bi bi-arrow-down' : 'bi bi-arrow-up';
+    }
+
+function downloadStudentLog() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('landscape');
+
+  const table = document.querySelector('.table');
+  const headers = [...table.querySelectorAll('th')].map(th => th.textContent.trim());
+  const rows = [...table.querySelectorAll('tbody tr')].map(row => {
+    const rowData = [...row.cells].map(cell => cell.textContent.trim());
+    const rowClass = row.classList.contains('table-danger') ? 'danger' :
+                     row.classList.contains('table-success') ? 'success' : '';
+    return { rowData, rowClass };
+  });
+
+  doc.setFontSize(16);
+  doc.text('Student Attendance Log', 14, 15);
+  doc.setFontSize(10);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
+
+  const body = rows.map(({ rowData, rowClass }) => {
+    return {
+      content: rowData,
+      styles: {
+        fillColor: rowClass === 'danger' ? [255, 199, 206] : rowClass === 'success' ? [198, 239, 206] : [255, 255, 255]
+      }
+    };
+  });
+
+  doc.autoTable({
+    head: [headers],
+    body: body.map(row => row.content),
+    startY: 25,
+    theme: 'grid',
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [71, 71, 71] },
+    bodyStyles: {
+      textColor: [0, 0, 0], // Black text for all rows
+    },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    rowPageBreak: 'auto',
+    didParseCell: function (data) {
+      if (data.section === 'body') {
+        const rowIndex = data.row.index;
+        const { rowClass } = rows[rowIndex];
+        if (rowClass === 'danger') {
+          data.cell.styles.fillColor = [255, 199, 206]; // Light red
+        } else if (rowClass === 'success') {
+          data.cell.styles.fillColor = [198, 239, 206]; // Light green
+        }
+      }
+    }
+  });
+
+  doc.save('student-attendance-log.pdf');
+}
+
+
+    document.getElementById('toggleDeleteButton').addEventListener('click', () => {
+      const deleteColumns = document.querySelectorAll('.delete-column');
+      deleteColumns.forEach(column => {
+        column.style.display = column.style.display === 'none' ? '' : 'none';
+      });
+    });
+
+    window.deleteStudent = async function (studentId) {
+      if (confirm('Are you sure you want to delete this student?')) {
+        try {
+          const db = window.database;
+          console.log('Attempting to delete student with ID:', studentId);
+          await window.dbRemove(window.dbRef(db, `students/${studentId}`));
+          console.log('Successfully deleted student with ID:', studentId);
+          alert(`Student with ID ${studentId} deleted successfully`);
+          window.fetchAndDisplayData();
+        } catch (error) {
+          console.error('Error deleting student:', error.message);
+          alert(`Failed to delete student ${studentId}: ${error.message}`);
+        }
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const instructorName = localStorage.getItem('instructorName');
+      if (instructorName) {
+        document.getElementById('instructorGreeting').textContent = instructorName;
+      }
     });
   </script>
 
