@@ -75,7 +75,12 @@
               <th scope="col">Day-6</th>
               <th scope="col">Day-7</th>
               <th scope="col">Day-8</th>
-              <th scope="col">Remarks</th>
+              <th scope="col">
+  Remarks
+  <button class="btn btn-sm" onclick="sortTable('remarks')">
+    <i class="bi bi-arrow-down-up" id="remarksSort"></i>
+  </button>
+</th>
               <th scope="col" class="delete-column" style="display: none;">Action</th>
             </tr>
           </thead>
@@ -325,35 +330,43 @@
       }
       return true;
     }
-    let sortStates = {
-      name: true,
-      roll: true
-    };
+let sortStates = {
+  name: true,
+  roll: true,
+  remarks: true
+};
 
-    function sortTable(column) {
-      const table = document.querySelector('.table');
-      const tbody = table.querySelector('tbody');
-      const rows = Array.from(tbody.querySelectorAll('tr'));
+function sortTable(column) {
+  const table = document.querySelector('.table');
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
 
-      rows.sort((a, b) => {
-        if (column === 'name') {
-          const nameA = a.cells[1].textContent.trim().toLowerCase(); // index 1 for name
-          const nameB = b.cells[1].textContent.trim().toLowerCase();
-          return sortStates.name ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-        } else if (column === 'roll') {
-          const rollA = parseInt(a.cells[2].textContent.trim()); // index 2 for roll number
-          const rollB = parseInt(b.cells[2].textContent.trim());
-          return sortStates.roll ? rollA - rollB : rollB - rollA;
-        }
-      });
-
-      tbody.innerHTML = '';
-      rows.forEach(row => tbody.appendChild(row));
-
-      sortStates[column] = !sortStates[column];
-      const icon = document.querySelector(`#${column}Sort`);
-      icon.className = sortStates[column] ? 'bi bi-arrow-down' : 'bi bi-arrow-up';
+  rows.sort((a, b) => {
+    if (column === 'name') {
+      const nameA = a.cells[1].textContent.trim().toLowerCase();
+      const nameB = b.cells[1].textContent.trim().toLowerCase();
+      return sortStates.name ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+    } else if (column === 'roll') {
+      const rollA = parseInt(a.cells[2].textContent.trim());
+      const rollB = parseInt(b.cells[2].textContent.trim());
+      return sortStates.roll ? rollA - rollB : rollB - rollA;
+    } else if (column === 'remarks') {
+      const remarkA = a.cells[13].textContent.trim(); // Column index for Remarks
+      const remarkB = b.cells[13].textContent.trim();
+      if (remarkA === remarkB) return 0;
+      return sortStates.remarks
+        ? remarkA === 'Probation' ? -1 : 1
+        : remarkA === 'Probation' ? 1 : -1;
     }
+  });
+
+  tbody.innerHTML = '';
+  rows.forEach(row => tbody.appendChild(row));
+
+  sortStates[column] = !sortStates[column];
+  const icon = document.querySelector(`#${column}Sort`);
+  icon.className = sortStates[column] ? 'bi bi-arrow-down' : 'bi bi-arrow-up';
+}
 
 function downloadStudentLog() {
   const { jsPDF } = window.jspdf;
