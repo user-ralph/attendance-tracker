@@ -75,7 +75,12 @@
               <th scope="col">Day-6</th>
               <th scope="col">Day-7</th>
               <th scope="col">Day-8</th>
-              <th scope="col">Remarks</th>
+              <th scope="col">
+  Remarks
+  <button class="btn btn-sm" onclick="sortTable('remarks')">
+    <i class="bi bi-arrow-down-up" id="remarksSort"></i>
+  </button>
+</th>
               <th scope="col" class="delete-column" style="display: none;">Action</th>
             </tr>
           </thead>
@@ -158,45 +163,57 @@
     window.dbRef = ref;
 
     function fetchAndDisplayData() {
-      const studentsRef = ref(database, 'students');
-      onValue(studentsRef, (snapshot) => {
-        const studentsData = snapshot.val();
-        const tableBody = document.getElementById('studentsData');
-        tableBody.innerHTML = '';
+  const studentsRef = ref(database, 'students');
+  onValue(studentsRef, (snapshot) => {
+    const studentsData = snapshot.val();
+    const tableBody = document.getElementById('studentsData');
+    tableBody.innerHTML = '';
 
-        for (const studentId in studentsData) {
-          const student = studentsData[studentId];
-          const row = document.createElement('tr');
+    for (const studentId in studentsData) {
+      const student = studentsData[studentId];
+      const row = document.createElement('tr');
 
-          const totalAttendance = student.classattendA + student.classattendB + student.classattendC + student.classattendD + student.classattendE + student.classattendF + student.classattendG + student.classattendH;
-          const remarks = totalAttendance < 5 ? 'Probation' : 'Regular';
+      const totalAttendance =
+        student.classattendA +
+        student.classattendB +
+        student.classattendC +
+        student.classattendD +
+        student.classattendE +
+        student.classattendF +
+        student.classattendG +
+        student.classattendH;
 
-          row.innerHTML = `
-            <td>${studentId}</td>
-            <td>${student.fullName}</td>
-            <td>${student.rollNumber}</td>
-            <td>${student.classCode}</td>
-            <td>${student.fingerprintEnroll ? 'Yes' : 'No'}</td>
-            <td>${student.classattendA}</td>
-            <td>${student.classattendB}</td>
-            <td>${student.classattendC}</td>
-            <td>${student.classattendD}</td>
-            <td>${student.classattendE}</td>
-            <td>${student.classattendF}</td>
-            <td>${student.classattendG}</td>
-            <td>${student.classattendH}</td>
-            <td>${remarks}</td>
-            <td class="delete-column" style="display: none;">
-              <button class="btn btn-link text-danger" onclick="deleteStudent('${studentId}')">
-                <i class="bi bi-trash"></i>
-              </button>
-            </td>
-          `;
+      const remarks = totalAttendance < 5 ? 'Probation' : 'Regular';
+      const rowClass = totalAttendance < 5 ? 'table-danger' : 'table-success';
 
-          tableBody.appendChild(row);
-        }
-      });
+      row.classList.add(rowClass); // Assign the appropriate class
+
+      row.innerHTML = `
+        <td>${studentId}</td>
+        <td>${student.fullName}</td>
+        <td>${student.rollNumber}</td>
+        <td>${student.classCode}</td>
+        <td>${student.fingerprintEnroll ? 'Yes' : 'No'}</td>
+        <td>${student.classattendA}</td>
+        <td>${student.classattendB}</td>
+        <td>${student.classattendC}</td>
+        <td>${student.classattendD}</td>
+        <td>${student.classattendE}</td>
+        <td>${student.classattendF}</td>
+        <td>${student.classattendG}</td>
+        <td>${student.classattendH}</td>
+        <td>${remarks}</td>
+        <td class="delete-column" style="display: none;">
+          <button class="btn btn-link text-danger" onclick="deleteStudent('${studentId}')">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      `;
+
+      tableBody.appendChild(row);
     }
+  });
+}
 
     window.fetchAndDisplayData = fetchAndDisplayData;
     window.onload = fetchAndDisplayData;
@@ -313,63 +330,99 @@
       }
       return true;
     }
-    let sortStates = {
-      name: true,
-      roll: true
+let sortStates = {
+  name: true,
+  roll: true,
+  remarks: true
+};
+
+function sortTable(column) {
+  const table = document.querySelector('.table');
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+
+  rows.sort((a, b) => {
+    if (column === 'name') {
+      const nameA = a.cells[1].textContent.trim().toLowerCase();
+      const nameB = b.cells[1].textContent.trim().toLowerCase();
+      return sortStates.name ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+    } else if (column === 'roll') {
+      const rollA = parseInt(a.cells[2].textContent.trim());
+      const rollB = parseInt(b.cells[2].textContent.trim());
+      return sortStates.roll ? rollA - rollB : rollB - rollA;
+    } else if (column === 'remarks') {
+      const remarkA = a.cells[13].textContent.trim(); // Column index for Remarks
+      const remarkB = b.cells[13].textContent.trim();
+      if (remarkA === remarkB) return 0;
+      return sortStates.remarks
+        ? remarkA === 'Probation' ? -1 : 1
+        : remarkA === 'Probation' ? 1 : -1;
+    }
+  });
+
+  tbody.innerHTML = '';
+  rows.forEach(row => tbody.appendChild(row));
+
+  sortStates[column] = !sortStates[column];
+  const icon = document.querySelector(`#${column}Sort`);
+  icon.className = sortStates[column] ? 'bi bi-arrow-down' : 'bi bi-arrow-up';
+}
+
+function downloadStudentLog() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('landscape');
+
+  const table = document.querySelector('.table');
+  const headers = [...table.querySelectorAll('th')].map(th => th.textContent.trim());
+  const rows = [...table.querySelectorAll('tbody tr')].map(row => {
+    const rowData = [...row.cells].map(cell => cell.textContent.trim());
+    const rowClass = row.classList.contains('table-danger') ? 'danger' :
+                     row.classList.contains('table-success') ? 'success' : '';
+    return { rowData, rowClass };
+  });
+
+  doc.setFontSize(16);
+  doc.text('Student Attendance Log', 14, 15);
+  doc.setFontSize(10);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
+
+  const body = rows.map(({ rowData, rowClass }) => {
+    return {
+      content: rowData,
+      styles: {
+        fillColor: rowClass === 'danger' ? [255, 199, 206] : rowClass === 'success' ? [198, 239, 206] : [255, 255, 255]
+      }
     };
+  });
 
-    function sortTable(column) {
-      const table = document.querySelector('.table');
-      const tbody = table.querySelector('tbody');
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-
-      rows.sort((a, b) => {
-        if (column === 'name') {
-          const nameA = a.cells[1].textContent.trim().toLowerCase(); // index 1 for name
-          const nameB = b.cells[1].textContent.trim().toLowerCase();
-          return sortStates.name ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-        } else if (column === 'roll') {
-          const rollA = parseInt(a.cells[2].textContent.trim()); // index 2 for roll number
-          const rollB = parseInt(b.cells[2].textContent.trim());
-          return sortStates.roll ? rollA - rollB : rollB - rollA;
+  doc.autoTable({
+    head: [headers],
+    body: body.map(row => row.content),
+    startY: 25,
+    theme: 'grid',
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [71, 71, 71] },
+    bodyStyles: {
+      textColor: [0, 0, 0], // Black text for all rows
+    },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    rowPageBreak: 'auto',
+    didParseCell: function (data) {
+      if (data.section === 'body') {
+        const rowIndex = data.row.index;
+        const { rowClass } = rows[rowIndex];
+        if (rowClass === 'danger') {
+          data.cell.styles.fillColor = [255, 199, 206]; // Light red
+        } else if (rowClass === 'success') {
+          data.cell.styles.fillColor = [198, 239, 206]; // Light green
         }
-      });
-
-      tbody.innerHTML = '';
-      rows.forEach(row => tbody.appendChild(row));
-
-      sortStates[column] = !sortStates[column];
-      const icon = document.querySelector(`#${column}Sort`);
-      icon.className = sortStates[column] ? 'bi bi-arrow-down' : 'bi bi-arrow-up';
+      }
     }
+  });
 
-    function downloadStudentLog() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('landscape');
+  doc.save('student-attendance-log.pdf');
+}
 
-      const table = document.querySelector('.table');
-      const headers = [...table.querySelectorAll('th')].map(th => th.textContent.trim());
-      const rows = [...table.querySelectorAll('tbody tr')].map(row =>
-        [...row.cells].map(cell => cell.textContent.trim())
-      );
-
-      doc.setFontSize(16);
-      doc.text('Student Attendance Log', 14, 15);
-      doc.setFontSize(10);
-      doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
-
-      doc.autoTable({
-        head: [headers],
-        body: rows,
-        startY: 25,
-        theme: 'grid',
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [71, 71, 71] },
-        alternateRowStyles: { fillColor: [245, 245, 245] }
-      });
-
-      doc.save('student-attendance-log.pdf');
-    }
 
     document.getElementById('toggleDeleteButton').addEventListener('click', () => {
       const deleteColumns = document.querySelectorAll('.delete-column');
